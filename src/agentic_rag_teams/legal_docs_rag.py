@@ -12,12 +12,15 @@ from langchain.tools import tool
 from langchain_community.vectorstores import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_openai import ChatOpenAI
-from langchain import hub
 
 from pydantic import BaseModel, Field
 from langgraph.graph import StateGraph, END, START
 from langgraph.graph.message import add_messages
 from typing_extensions import TypedDict
+
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("Legal_Docs_RAG")
 
 # -----------------------------
 # 🧠 1. Vector Store & Embedding
@@ -145,13 +148,22 @@ Formulate an improved question:"""
 def generate(state):
     print("---FINAL GENERATE---")
     question = state["messages"][0].content
-    docs = state["messages"][-1].content
+    context = state["messages"][-1].content
 
-    prompt = hub.pull("rlm/rag-prompt")
+    #prompt = hub.pull("rlm/rag-prompt")
+    prompt = PromptTemplate(
+    input_variables=["context", "question"],
+    template="""You are a legal assistant. Based on the user question below,
+    summarize the following legal texts in a way that directly answers the user's intent.
+    User question: {question}
+    
+    Legal documents: {context}
+    
+    Summary:""")
     llm = ChatOpenAI(model_name="gpt-4o", temperature=0, streaming=True)
     rag_chain = prompt | llm | StrOutputParser()
 
-    response = rag_chain.invoke({"context": docs, "question": question})
+    response = rag_chain.invoke({"context": context, "question": question})
     return {"messages": [response]}
 
 
@@ -238,11 +250,7 @@ workflow.add_edge("generate", END)
 
 graph = workflow.compile()
 
-'''with open("/workspace/agentic_rag/construction_site_safety_guide_agent/mermaid/supervisor_rag.md", "w") as f:
-    f.write("```mermaid\n")
-    f.write(graph.get_graph().draw_mermaid())
-    f.write("```")'''
-
+'''
 initial_state = {
     "messages": [HumanMessage(content="건설현장에서 굴착 작업을 할 때 근로자의 접근을 통제해야 하는 법적 근거가 무엇인가요?")]
 }
@@ -251,4 +259,22 @@ initial_state = {
 final_state = graph.invoke(initial_state)
 
 for msg in final_state["messages"]:
-    print(f"[{msg.__class__.__name__}]: {msg.content}")
+    print(f"[{msg.__class__.__name__}]: {msg.content}")'''
+
+
+@mcp.tool()
+def construction_safety_law_RAG(query: str) -> str:
+    initial_state = {
+        "messages": [HumanMessage(content=query)]
+    }
+
+    final_state = graph.invoke(initial_state)
+    messages = final_state["messages"][-1].content
+
+    #return last_msg
+    return str(messages)
+
+if __name__ == "__main__":
+    # stdio 전송을 사용하여 서버 실행
+    print("Starting Legal Docs RAG MCP server via stdio...")
+    mcp.run(transport="stdio")
