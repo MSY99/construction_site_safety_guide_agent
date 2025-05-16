@@ -46,9 +46,14 @@ def load_config_from_json():
         dict: Loaded settings
     """
     default_config = {
-        "get_current_time": {
+        "legal_docs_rag": {
             "command": "python",
-            "args": ["./mcp_server_time.py"],
+            "args": ["./rag_mcps/legal_docs_rag.py"],
+            "transport": "stdio"
+        },
+        "safetycase_rag": {
+            "command": "python",
+            "args": ["./rag_mcps/safety_cases_rag.py"],
             "transport": "stdio"
         }
     }
@@ -474,12 +479,6 @@ async def initialize_session(mcp_config=None):
                 temperature=0.1,
                 max_tokens=OUTPUT_TOKEN_INFO[selected_model]["max_tokens"],
             )
-        ''' agent = create_react_agent(
-            model,
-            tools,
-            checkpointer=MemorySaver(),
-            prompt=SYSTEM_PROMPT,
-        ) '''
 
         # agent = build_agent()
         agent = create_react_agent(

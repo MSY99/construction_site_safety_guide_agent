@@ -1,0 +1,30 @@
+{
+  "legal_docs_rag": {
+    "command": "python",
+    "args": [
+      "./rag_mcps/legal_docs_rag.py"
+    ],
+    "transport": "stdio"
+  },
+  "safetycase_rag": {
+    "command": "python",
+    "args": [
+      "./rag_mcps/safety_cases_rag.py"
+    ],
+    "transport": "stdio"
+  },
+  "confluence-mcp": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@smithery/cli@latest",
+      "run",
+      "@cosmix/confluence-mcp",
+      "--key",
+      "47a2dcfa-3670-464c-9ebf-7b0ab9005f2a",
+      "--profile",
+      "basic-scorpion-867pfJ"
+    ],
+    "transport": "stdio"
+  }
+}

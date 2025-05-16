@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from typing import Annotated, Sequence, Literal
+from langgraph.graph.message import add_messages
 
 from langchain_core.documents import Document
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
@@ -15,7 +16,6 @@ from langchain_openai import ChatOpenAI
 
 from pydantic import BaseModel, Field
 from langgraph.graph import StateGraph, END, START
-from langgraph.graph.message import add_messages
 from typing_extensions import TypedDict
 
 from mcp.server.fastmcp import FastMCP
@@ -67,7 +67,6 @@ class AgentState(TypedDict):
 # -----------------------------
 # 🧠 4. 노드 정의
 # -----------------------------
-
 def supervisor(state):
     print("---CALL SUPERVISOR---")
     messages = state["messages"]
