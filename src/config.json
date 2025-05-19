@@ -19,5 +19,12 @@
       "./rag_mcps/legal_docs_rag.py"
     ],
     "transport": "stdio"
+  },
+  "safety_cases_rag": {
+    "command": "python",
+    "args": [
+      "./rag_mcps/safety_cases_rag.py"
+    ],
+    "transport": "stdio"
   }
 }

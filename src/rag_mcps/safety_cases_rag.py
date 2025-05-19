@@ -266,10 +266,31 @@ def construction_safety_cases_RAG(query: str) -> str:
         "messages": [HumanMessage(content=query)]
     }
 
+    output_log = []
+
+    for step in graph.stream(initial_state):
+        for node_name, value in step.items():
+            output_log.append(f"[Node: {node_name}]\n")
+            # messages가 list일 경우 예쁘게 출력
+            if isinstance(value, dict) and "messages" in value:
+                for msg in value["messages"]:
+                    if hasattr(msg, 'type') and hasattr(msg, 'content'):
+                        output_log.append(f"{msg.type.upper()}: {msg.content}\n")
+                    else:
+                        output_log.append(f"{msg}\n")
+            else:
+                output_log.append(f"{value}\n")
+
+    return "".join(output_log)
+'''def construction_safety_cases_RAG(query: str) -> str:
+    initial_state = {
+        "messages": [HumanMessage(content=query)]
+    }
+
     final_state = graph.invoke(initial_state)
     messages = final_state["messages"][-1].content
 
-    return str(messages)
+    return str(messages)'''
 
 if __name__ == "__main__":
     # stdio 전송을 사용하여 서버 실행
