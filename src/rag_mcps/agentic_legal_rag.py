@@ -18,10 +18,6 @@ from pydantic import BaseModel, Field
 from langgraph.graph import StateGraph, END, START
 from typing_extensions import TypedDict
 
-from mcp.server.fastmcp import FastMCP
-
-mcp = FastMCP("Legal_Docs_RAG")
-
 # -----------------------------
 # 🧠 1. Vector Store & Embedding
 # -----------------------------
@@ -34,7 +30,7 @@ vectorstore = Chroma(
     collection_name="legal_docs_1",
     embedding_function=embedding_model,
 )
-retriever = vectorstore.as_retriever()
+retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
 
 
 # -----------------------------
@@ -249,19 +245,6 @@ workflow.add_edge("generate", END)
 
 graph = workflow.compile()
 
-'''
-initial_state = {
-    "messages": [HumanMessage(content="건설현장에서 굴착 작업을 할 때 근로자의 접근을 통제해야 하는 법적 근거가 무엇인가요?")]
-}
-
-# 그래프 실행
-final_state = graph.invoke(initial_state)
-
-for msg in final_state["messages"]:
-    print(f"[{msg.__class__.__name__}]: {msg.content}")'''
-
-
-@mcp.tool()
 def construction_safety_legal_docs_RAG(query: str) -> str:
     initial_state = {
         "messages": [HumanMessage(content=query)]
@@ -283,18 +266,9 @@ def construction_safety_legal_docs_RAG(query: str) -> str:
                 output_log.append(f"{value}\n")
 
     return "".join(output_log)
-'''def construction_safety_law_RAG(query: str) -> str:
-    initial_state = {
-        "messages": [HumanMessage(content=query)]
-    }
-
-    final_state = graph.invoke(initial_state)
-    messages = final_state["messages"][-1].content
-
-    #return last_msg
-    return str(messages)'''
 
 if __name__ == "__main__":
-    # stdio 전송을 사용하여 서버 실행
-    print("Starting Legal Docs RAG MCP server via stdio...")
-    mcp.run(transport="stdio")
+    query = "건설 현장에서 굴착 작업을 할 때 사람이 접근하는 것을 통제해야 하는 법적 근거가 필요해."
+
+    result = construction_safety_legal_docs_RAG(query)
+    print(result)
