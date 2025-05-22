@@ -1,4 +1,42 @@
 {
+  "server-sequential-thinking": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@smithery/cli@latest",
+      "run",
+      "@smithery-ai/server-sequential-thinking",
+      "--key",
+      "47a2dcfa-3670-464c-9ebf-7b0ab9005f2a"
+    ],
+    "transport": "stdio"
+  },
+  "legal_docs_rag": {
+    "command": "python",
+    "args": [
+      "./custom_mcps/legal_docs_rag.py"
+    ],
+    "transport": "stdio"
+  },
+  "safety_cases_rag": {
+    "command": "python",
+    "args": [
+      "./custom_mcps/safety_cases_rag.py"
+    ],
+    "transport": "stdio"
+  },
+  "time-mcp": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@smithery/cli@latest",
+      "run",
+      "@yokingma/time-mcp",
+      "--key",
+      "47a2dcfa-3670-464c-9ebf-7b0ab9005f2a"
+    ],
+    "transport": "stdio"
+  },
   "confluence-mcp": {
     "command": "npx",
     "args": [
@@ -10,20 +48,6 @@
       "47a2dcfa-3670-464c-9ebf-7b0ab9005f2a",
       "--profile",
       "basic-scorpion-867pfJ"
-    ],
-    "transport": "stdio"
-  },
-  "legal_docs_rag": {
-    "command": "python",
-    "args": [
-      "./rag_mcps/legal_docs_rag.py"
-    ],
-    "transport": "stdio"
-  },
-  "safety_cases_rag": {
-    "command": "python",
-    "args": [
-      "./rag_mcps/safety_cases_rag.py"
     ],
     "transport": "stdio"
   }

@@ -130,7 +130,7 @@ if use_login and not st.session_state.authenticated:
     st.stop()
 
 # Add author information at the top of the sidebar (placed before other sidebar elements)
-st.sidebar.markdown("### 건설 현장 안전 관리 Agent Demo")
+st.sidebar.markdown("### Settings")
 st.sidebar.markdown(
     "### 💻 [Project Page](https://github.com/teddynote-lab/langgraph-mcp-agents)"
 )
@@ -138,7 +138,7 @@ st.sidebar.markdown(
 st.sidebar.divider()  # Add divider
 
 # Existing page title and description
-st.title("💬 MCP Tool Utilization Agent")
+st.title("🖥️ 건설 현장 안전 관리 업무 보조 Agent Demo")
 st.markdown("✨ Ask questions to the ReAct agent that utilizes MCP tools.")
 
 SYSTEM_PROMPT = """<ROLE>

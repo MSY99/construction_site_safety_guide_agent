@@ -20,7 +20,7 @@ from typing_extensions import TypedDict
 
 from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP("Legal_Docs_RAG")
+mcp = FastMCP("Safety_Cases_RAG")
 
 # -----------------------------
 # 🧠 1. Vector Store & Embedding
@@ -31,7 +31,7 @@ ENCODER = "dragonkue/BGE-m3-ko"
 embedding_model = HuggingFaceEmbeddings(model_name=ENCODER)
 vectorstore = Chroma(
     persist_directory=persist_dir,
-    collection_name="legal_docs_1",
+    collection_name="safety_case_2", # safety_case_2 (지게차 사고사례가 추가된 DB)
     embedding_function=embedding_model,
 )
 retriever = vectorstore.as_retriever()
@@ -41,28 +41,26 @@ retriever = vectorstore.as_retriever()
 # 🧾 2. Tool 정의
 # -----------------------------
 @tool
-def retrieve_safety_legal_docs(query: str) -> str:
+def retrieve_safety_cases_docs(query: str) -> str:
     """
-    Search and return legal documents or regulations related to safety rules on construction sites.
+    Search and return some safety cases on construction sites.
     Returns the document title and content.
     """
     docs: list[Document] = retriever.invoke(query)
     result = "\n\n".join(
-        f"Title: {doc.metadata.get('title', 'No Title')}\n{doc.page_content}"
+        f"""Case_factor: {doc.metadata.get('case_factor', 'No case_factor')}, Case_category: {doc.metadata.get('case_category', 'No case_category')}\n
+        {doc.page_content}"""
         for doc in docs
     )
     return result
 
-
-tools = [retrieve_safety_legal_docs]
-
+tools = [retrieve_safety_cases_docs]
 
 # -----------------------------
 # 🧩 3. State 정의
 # -----------------------------
 class AgentState(TypedDict):
     messages: Annotated[Sequence[BaseMessage], add_messages]
-
 
 # -----------------------------
 # 🧠 4. 노드 정의
@@ -100,7 +98,6 @@ def supervisor(state):
 
     return {"messages": messages + [response]}
 
-
 def RAG_retrieve(state):
     print("---RAG QUERY + RETRIEVE---")
 
@@ -123,7 +120,8 @@ def RAG_retrieve(state):
     # 문서 검색
     docs: list[Document] = retriever.invoke(search_query)
     result = "\n\n".join(
-        f"Title: {doc.metadata.get('title', 'No Title')}\n{doc.page_content}"
+        f"""Case_factor: {doc.metadata.get('case_factor', 'No case_factor')}, Case_category: {doc.metadata.get('case_category', 'No case_category')}\n
+        {doc.page_content}"""
         for doc in docs
     )
     return {"messages": state["messages"] + [AIMessage(content=result)]}
@@ -152,13 +150,21 @@ def generate(state):
     #prompt = hub.pull("rlm/rag-prompt")
     prompt = PromptTemplate(
     input_variables=["context", "question"],
-    template="""You are a legal assistant. Based on the user question below,
-    summarize the following legal texts in a way that directly answers the user's intent.
-    User question: {question}
-    
-    Legal documents: {context}
-    
-    Summary:""")
+    template="""You are a construction safety incident analyst. Based on the user question below,
+summarize the following incident cases in a way that directly addresses the user's intent.
+
+User question: {question}
+
+Incident cases: {context}
+
+Summary requirements:
+
+- Only include cases that are clearly relevant to the user's question.
+- For each relevant case, summarize it in one sentence.
+- Begin each summary with 'Case_factor: [value], Case_category: [value]' and then provide the summary.
+
+If there are no incident cases or no relevant cases, respond with: "해당 질문과 관련된 사례를 찾을 수 없습니다."
+Summary:""")
     llm = ChatOpenAI(model_name="gpt-4o", temperature=0, streaming=True)
     rag_chain = prompt | llm | StrOutputParser()
 
@@ -195,11 +201,12 @@ def grade_documents(state) -> Literal["generate", "rewrite"]:
     llm_with_output = model.with_structured_output(Grade)
 
     prompt = PromptTemplate(
-        template = """You are a grader assessing relevance of a retrieved document to a user question. \n
-        Here is the retrieved document: \n\n {context} \n\n
+        template = """You are a grader assessing relevance of a retrieved document to a user question.
+        Here is the retrieved document:\n\n {context} \n\n
         Here is the user question: {question} \n
-        If the document contains keyword(s) or semantic meaning related to the user question, grade it as relevant. \n
-        Give a binary score 'yes' or 'no' score to indicate whether the document is relevant to the question.""",
+If the document contains keyword(s) or semantic meaning related to the user question, grade it as relevant.
+If there is no retrieved document or the document is empty, grade it as "yes" by default.
+Give a binary score: 'yes' or 'no' to indicate whether the document is relevant to the question.""",
         input_variables=["context", "question"],
     )
 
@@ -249,20 +256,8 @@ workflow.add_edge("generate", END)
 
 graph = workflow.compile()
 
-'''
-initial_state = {
-    "messages": [HumanMessage(content="건설현장에서 굴착 작업을 할 때 근로자의 접근을 통제해야 하는 법적 근거가 무엇인가요?")]
-}
-
-# 그래프 실행
-final_state = graph.invoke(initial_state)
-
-for msg in final_state["messages"]:
-    print(f"[{msg.__class__.__name__}]: {msg.content}")'''
-
-
 @mcp.tool()
-def construction_safety_legal_docs_RAG(query: str) -> str:
+def construction_safety_cases_RAG(query: str) -> str:
     initial_state = {
         "messages": [HumanMessage(content=query)]
     }
@@ -283,7 +278,7 @@ def construction_safety_legal_docs_RAG(query: str) -> str:
                 output_log.append(f"{value}\n")
 
     return "".join(output_log)
-'''def construction_safety_law_RAG(query: str) -> str:
+'''def construction_safety_cases_RAG(query: str) -> str:
     initial_state = {
         "messages": [HumanMessage(content=query)]
     }
@@ -291,10 +286,9 @@ def construction_safety_legal_docs_RAG(query: str) -> str:
     final_state = graph.invoke(initial_state)
     messages = final_state["messages"][-1].content
 
-    #return last_msg
     return str(messages)'''
 
 if __name__ == "__main__":
     # stdio 전송을 사용하여 서버 실행
-    print("Starting Legal Docs RAG MCP server via stdio...")
+    print("Starting Safety cases RAG MCP server via stdio...")
     mcp.run(transport="stdio")

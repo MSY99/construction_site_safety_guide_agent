@@ -20,7 +20,7 @@ from typing_extensions import TypedDict
 
 from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP("Safety_Cases_RAG")
+mcp = FastMCP("Legal_Docs_RAG")
 
 # -----------------------------
 # 🧠 1. Vector Store & Embedding
@@ -31,36 +31,38 @@ ENCODER = "dragonkue/BGE-m3-ko"
 embedding_model = HuggingFaceEmbeddings(model_name=ENCODER)
 vectorstore = Chroma(
     persist_directory=persist_dir,
-    collection_name="safety_case_1",
+    collection_name="legal_docs_1",
     embedding_function=embedding_model,
 )
-retriever = vectorstore.as_retriever()
+retriever = vectorstore.as_retriever(search_kwargs={"k": 8})
 
 
 # -----------------------------
 # 🧾 2. Tool 정의
 # -----------------------------
 @tool
-def retrieve_safety_cases_docs(query: str) -> str:
+def retrieve_safety_legal_docs(query: str) -> str:
     """
-    Search and return some safety cases on construction sites.
+    Search and return legal documents or regulations related to safety rules on construction sites.
     Returns the document title and content.
     """
     docs: list[Document] = retriever.invoke(query)
     result = "\n\n".join(
-        f"""Case_factor: {doc.metadata.get('case_factor', 'No case_factor')}, Case_category: {doc.metadata.get('case_category', 'No case_category')}\n
-        {doc.page_content}"""
+        f"Title: {doc.metadata.get('title', 'No Title')}\n{doc.page_content}"
         for doc in docs
     )
     return result
 
-tools = [retrieve_safety_cases_docs]
+
+tools = [retrieve_safety_legal_docs]
+
 
 # -----------------------------
 # 🧩 3. State 정의
 # -----------------------------
 class AgentState(TypedDict):
     messages: Annotated[Sequence[BaseMessage], add_messages]
+
 
 # -----------------------------
 # 🧠 4. 노드 정의
@@ -97,6 +99,7 @@ def supervisor(state):
         return {"messages": new_messages}
 
     return {"messages": messages + [response]}
+
 
 def RAG_retrieve(state):
     print("---RAG QUERY + RETRIEVE---")
@@ -149,13 +152,22 @@ def generate(state):
     #prompt = hub.pull("rlm/rag-prompt")
     prompt = PromptTemplate(
     input_variables=["context", "question"],
-    template="""You are a legal assistant. Based on the user question below,
-    summarize the following legal texts in a way that directly answers the user's intent.
-    User question: {question}
-    
-    Legal documents: {context}
-    
-    Summary:""")
+    template="""You are a legal assistant. Based on the user question below, summarize the following legal documents in a way that directly answers the user's intent.
+
+User question: {question}
+
+Legal documents: {context}
+
+Summary requirements:
+1. For each relevant document, write a one-line summary that clearly states how it answers or supports the user's question.
+2. Start each summary with the document's **Title** (e.g., "Title: 제342조"), and do not omit it.
+3. If a document is **not clearly related** to the user's question, **exclude it** from the summary.
+
+Output format:
+- Title: [Document Title] — [One-line summary of the relevant legal point]
+
+Summary:
+""")
     llm = ChatOpenAI(model_name="gpt-4o", temperature=0, streaming=True)
     rag_chain = prompt | llm | StrOutputParser()
 
@@ -246,22 +258,20 @@ workflow.add_edge("generate", END)
 
 graph = workflow.compile()
 
-
-'''inputs = {
-    "messages": [
-        ("user", "굴착 작업 중에 부딪힘 사고 사례를 알려줘."),
-    ]
+'''
+initial_state = {
+    "messages": [HumanMessage(content="건설현장에서 굴착 작업을 할 때 근로자의 접근을 통제해야 하는 법적 근거가 무엇인가요?")]
 }
 
-for output in graph.stream(inputs):
-    for key, value in output.items():
-        pprint.pprint(f"Output from the node '{key}': ")
-        pprint.pprint("---")
-        pprint.pprint(value, indent=2, width = 80, depth=None)
-    pprint.pprint("\n---\n")'''
+# 그래프 실행
+final_state = graph.invoke(initial_state)
+
+for msg in final_state["messages"]:
+    print(f"[{msg.__class__.__name__}]: {msg.content}")'''
+
 
 @mcp.tool()
-def construction_safety_cases_RAG(query: str) -> str:
+def construction_safety_legal_docs_RAG(query: str) -> str:
     initial_state = {
         "messages": [HumanMessage(content=query)]
     }
@@ -282,7 +292,7 @@ def construction_safety_cases_RAG(query: str) -> str:
                 output_log.append(f"{value}\n")
 
     return "".join(output_log)
-'''def construction_safety_cases_RAG(query: str) -> str:
+'''def construction_safety_law_RAG(query: str) -> str:
     initial_state = {
         "messages": [HumanMessage(content=query)]
     }
@@ -290,9 +300,10 @@ def construction_safety_cases_RAG(query: str) -> str:
     final_state = graph.invoke(initial_state)
     messages = final_state["messages"][-1].content
 
+    #return last_msg
     return str(messages)'''
 
 if __name__ == "__main__":
     # stdio 전송을 사용하여 서버 실행
-    print("Starting Safety cases RAG MCP server via stdio...")
+    print("Starting Legal Docs RAG MCP server via stdio...")
     mcp.run(transport="stdio")
