@@ -1,3 +1,7 @@
+"""
+➡️ 산업안전보건기준에 의한 규칙 법률 문서를 "조" 단위로 내용 요약을 생성한 JSON 파일에 대해 Agentic RAG를 수행하는 MCP 도구 코드입니다.
+"""
+
 from dotenv import load_dotenv
 
 load_dotenv()

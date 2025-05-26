@@ -1,3 +1,7 @@
+"""
+➡️ 현재 시각을 알 수 있도록 하는 MCP 도구입니다. (https://smithery.ai/server/@yokingma/time-mcp의 성능이 좋아 대체하였음.)
+"""
+
 from datetime import datetime
 from pytz import timezone
 

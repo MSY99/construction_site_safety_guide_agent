@@ -1,3 +1,7 @@
+"""
+➡️ Naive RAG의 검색 결과를 테스트하기 위한 코드입니다.
+"""
+
 from langchain_community.vectorstores import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 

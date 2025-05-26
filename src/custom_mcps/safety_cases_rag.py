@@ -1,3 +1,7 @@
+"""
+➡️ 안전보건공단의 사고 사례집에서 일부 데이터를 추출한 것에 대해 Agentic RAG를 수행하는 MCP 도구 코드입니다.
+"""
+
 from dotenv import load_dotenv
 
 load_dotenv()

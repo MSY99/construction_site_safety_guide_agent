@@ -1,3 +1,10 @@
+"""
+✅ Teddy Note: langgraph-mcp-agents의 streamlit 프론트 코드와 utils 코드를 활용했습니다.
+
+- main_app.py: streamlit HOST app 코드
+- utils.py: streamlit HOST에서 Agent의 응답을 streaming으로 출력할 수 있도록 해주는 도구 함수 코드
+"""
+
 import streamlit as st
 import asyncio
 import nest_asyncio
