@@ -49,8 +49,8 @@ python src/main_app.py
 에이전트는 다양한 법적 문서와 안전 사례를 분석하여 결과를 제공합니다.
 
 주요 파일 설명
-src/agent_graph.py: 에이전트 그래프 관련 코드.
-src/config.json: 설정 정보를 담고 있는 파일.
-src/custom_mcps: 사용자 정의 모듈 디렉토리.
-src/naive_rag_mcps: 기본 모듈 디렉토리.
-src/utils.py: 유틸리티 함수들이 포함된 파일.
+- src/agent_graph.py: 에이전트 그래프 관련 코드.
+- src/config.json: 설정 정보를 담고 있는 파일.
+- src/custom_mcps: 사용자 정의 모듈 디렉토리.
+- src/naive_rag_mcps: 기본 모듈 디렉토리.
+- src/utils.py: 유틸리티 함수들이 포함된 파일.
